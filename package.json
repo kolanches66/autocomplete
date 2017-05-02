@@ -1,0 +1,11 @@
+{
+  "name": "autocomplete",
+  "version": "0.1.2",
+  "description": "My autocomplete for SKB Kontur",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kolanches66",
+  "license": "ISC"
+}
