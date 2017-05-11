@@ -1,7 +1,8 @@
 var inp = document.getElementById("autocomp__textbox");
 var listBox = document.getElementById('autocomp__list');
+var cityCount = 0;
 
-// костыль для нормальной работы xmlhttp в IE
+// костыль для нормальной работы xmlhttp в старых версиях IE
 function getXmlHttp(){
   var xmlhttp;
   try {
@@ -19,6 +20,29 @@ function getXmlHttp(){
   return xmlhttp;
 }
 
+// AJAX
+function kladrLoad(file, string, displayLimit) {  
+  var xmlhttp = getXmlHttp();
+  var params = "city=" + encodeURIComponent(string);
+
+  xmlhttp.open('POST', file, true);
+  xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+      var cities = JSON.parse(xmlhttp.responseText);
+      cityCount = cities.realCount;
+      // ищем в списке соответсвие
+      findString(cities.array, list, string, 'City');
+      // генерируем UL список подходящих городов
+      listBox.innerHTML = "";
+      listBox.appendChild(generateUL(list, displayLimit, inp.id));
+    }
+  };
+  // отправляем введенную юзером строку
+  xmlhttp.send(params);
+}
+
 
 function generateUL(array, displayLimit) {
   var ul = document.createElement('ul');
@@ -27,38 +51,52 @@ function generateUL(array, displayLimit) {
 
   for(var i = 0; i < max+1; i++) {
     var li = document.createElement('li');
-
-    var leftText = array[i]['string'].slice(0, array[i]['boldStartPos']);
-    var boldText = array[i]['string'].slice(
-      array[i]['boldStartPos'], 
-      array[i]['boldEndPos']
-    );
-     var rightText = array[i]['string'].slice(
-       array[i]['boldEndPos'], 
-       array[i]['string'].length
-     );
-    li.innerHTML = leftText + '<b>' + boldText + '</b>' +rightText;
+    var city = array[i]['string'];
+    var cityRegExp = new RegExp('('+inp.value+')', 'i');
+    
+    // выделяем введенную часть города
+    var liString = city.replace(cityRegExp, '<b>$1</b>');
+    liString = '<a onclick="selectCity(\''+city+'\');">' + liString + '</a>';
+    li.innerHTML = liString;
     ul.appendChild(li);
   }
+  
   // добавочная информация
   if (array.length > displayLimit) {
     var li = document.createElement('li');
     li.innerHTML = 
-      "Показано " + max.toString() + " из " + array[array.length-1] + " найденных городов";
+      "Показано " + max.toString() + " из " + array.length + " найденных городов";
     ul.appendChild(li);
-    console.log(array[array.length]);
+    //console.log(array[array.length]);
   } else if (array.length == 0) {
     var li = document.createElement('li');
     li.innerHTML = 
-      "Ничего не найдено. Такого города нет в списке или вы опечатались";
+      "Ничего не найдено";
+      //+ "Такого города нет в списке или вы опечатались";
     ul.appendChild(li);
   }
+  
   var li = document.createElement('li');
-  li.innerHTML = 
-    "Всего загружено городов: " + array.length.toString();
+  li.innerHTML = "Всего загружено городов: " + cityCount;
   ul.appendChild(li);
 
   return ul;
+}
+
+function changeTextHide() {
+  onchangetext.oldText = inp.value;
+  onchangetext.newText = inp.value;
+}
+
+function listBoxHide() {
+  listBox.style.display = 'none';
+  listBox.innerHTML = "";
+}
+
+function selectCity(city) {
+  inp.value = city;
+  changeTextHide();
+  listBoxHide();
 }
 
 function onchangetext(inp, listBox) {
@@ -75,34 +113,14 @@ function onchangetext(inp, listBox) {
   if (inp.value.length >= 1) {
     // если изменился текст
     if (onchangetext.newText != onchangetext.oldText) {
-      // очищаем список
+      // очищаем список и показываем его
       list = [];
       listBox.style.display = '';
       
-      function kladrLoad(file, string, displayLimit) {  
-        var xmlhttp = getXmlHttp();
-        var params = "city=" + encodeURIComponent(string);
-
-        xmlhttp.open('POST', file, true);
-        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-        xmlhttp.onreadystatechange = function() {
-          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            var cities = JSON.parse(xmlhttp.responseText);
-            // ищем в списке соответсвие
-            findString(cities, list, string, 'City');
-            // формируем список
-            listBox.innerHTML = "";
-            listBox.appendChild(generateUL(list, displayLimit, inp.id));
-          }
-        };
-        xmlhttp.send(params);
-      }
       var displayLimit = 10;    // сколько показывать городов в списке
       kladrLoad("kladr.json", inp.value, displayLimit);
     }
   }
-  setTimeout(onchangetext, 100, inp, listBox);
 }
 
-setTimeout(onchangetext, 100, inp, listBox);
+setInterval(onchangetext, 100, inp, listBox);

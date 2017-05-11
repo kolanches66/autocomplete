@@ -9,6 +9,11 @@
 }
 .layout { font-family: Verdana; }
 
+a {
+  color: #0077cc;
+  cursor: pointer;
+}
+
 .autocomp {
   margin: 15px 10px;
   width: 350px;
@@ -44,7 +49,11 @@
     border-top: 0;
     width: 100%;
   }
-
     .autocomp__list > ul {
+      font: 14px "Segoe UI"; 
+      line-height: 20px;
       list-style: none;
     }
+      .autocomp__list > ul > li {
+        padding: 3px 10px;
+      }

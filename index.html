@@ -4,30 +4,21 @@
   <meta charset="UTF-8">
   <title>Autocomplete</title>
   <link rel="stylesheet" href="./styles.css">
+  <script src="autocomplete_obj.js"></script>
 </head>
 <body class="layout">
   <div class="autocomp">
     <div>
       <input id="autocomp__textbox" placeholder="Начните вводить название города" class="autocomp__textbox" type="text">
-      <!-- <script>
-        function selectSubStr(string, subStr) {
-          return string.replace(new RegExp(subStr, 'g'), '<b>' + subStr + '</b>')
-        }
-        alert(selectSubStr('Екатеринбург', 'екат'));
-      </script> -->
-
-      <!-- <script>
-        document.addEventListener('DOMContentLoaded', function() { document.querySelector('input').oninput = changeEventHandler; }, false);
-        function changeEventHandler(event) {
-          alert("!");
-        }
-      </script> -->
     </div>
     <div id="autocomp__list" class="autocomp__list">
     </div>
   </div>
   <!-- <script src="abc.js"></script> -->
   <script src="search.js"></script>
+  <script>
+    //var my_autoComplete = new AutoComplete('.autocomp__textbox', '.autocomp__list');
+  </script>
   <script src="autocomplete.js"></script>
 </body>
 

@@ -9,13 +9,20 @@ function kladrSelectStrings(array, string, byField) {
   for (var i=0, counter=0; i<array.length; i++) {
     var arrString = (array[i][byField]).toLowerCase();   // меняем регистр строки из массива
     if (arrString.indexOf(lString) >= 0) {     // если найдено совпадение
-      if (counter < limit) arrOut.push(array[i]);   // добавляем в свежий массив, если не превышает лимит
+      if (counter < limit) {
+        arrOut.push(array[i][byField]);
+        //console.log(arrOut[i]);
+      }   // добавляем в свежий массив, если не превышает лимит
       counter++;             // поднимаем счетчик
     }
   }
-  var item ={ Id: counter, City: counter.toString() };
-  arrOut.push(item);
-  return arrOut;
+    
+  var list = {
+    array: arrOut.sort(),
+    realCount: counter
+  };
+
+  return list;
 }
 
 http.createServer(function (req, res) {
@@ -35,27 +42,10 @@ http.createServer(function (req, res) {
     res.end();
   }
 
-  if(req_url.indexOf('.html') != -1 && fs.existsSync('.' + req_url))
-  {
-    fs.readFile('.' + req_url, function (err, data) {
-      if (err) console.log(err);
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write(data);
-      process.stdout.write(req_url + " : OK\n");
-      res.end();
-    });
-  }
-
-  if(req.url.indexOf('.js') != -1 && req.url.indexOf('.json') == -1 && fs.existsSync('.' + req.url))
-  {
-    fs.readFile('.' + req.url, function (err, data) {
-      if (err) console.log(err);
-      res.writeHead(200, {'Content-Type': 'text/javascript'});
-      res.write(data);
-      process.stdout.write(req_url + " : OK\n");
-      res.end();
-    });
-  }
+  // обрабатывае запросы на получение html, css и js файлов
+  getFile('html', 'text/html', req, res);
+  getFile('css', 'text/css', req, res);
+  getFile('js', 'text/js', req, res);
 
   if(req.url.indexOf('.json') != -1 && fs.existsSync('.' + req.url)) {
     // 
@@ -66,6 +56,7 @@ http.createServer(function (req, res) {
         if (err) throw err;
 
         var arr = JSON.parse(data);
+        console.log(arr.length);
         res.writeHead(200, {'Content-Type': 'application/json'});
         // process.stdout.write(req_url + " : " + "OK");
         // process.stdout.write(" : " + req.method + '\n');
@@ -79,23 +70,15 @@ http.createServer(function (req, res) {
 
             function hCode2String(string){
               return string.replace(/&#([0-9]+);/g, 
-                function(str, a, offset, s) {
+                function(a) {
                   return String.fromCharCode(Number(a));
                 }
               );
             }
-
             var postCity = hCode2String(fields.city);
-            //process.stdout.write(fields.string + " : " + subStr);
-
-            //var t = new Date();
-            //process.stdout.write(" - " + t.getHours() + ":" + t.getMinutes()+ ":" + t.getSeconds() + '\n');
 
             var list = kladrSelectStrings(arr, postCity, 'City');
-            //console.log(list);
             res.write(JSON.stringify(list));
-            //t = new Date();
-            //process.stdout.write(" - " + t.getHours() + ":" + t.getMinutes()+ ":" + t.getSeconds() + '\n');
             res.end();
           });
         }
@@ -119,15 +102,20 @@ http.createServer(function (req, res) {
     }
   }
 
-  if(req.url.indexOf('.css') != -1){
+}).listen(8888);
+console.log('Server has started on the port 8888');
+
+
+
+function getFile(format, contentType, req, res) {
+  var formatRegExp = new RegExp('\.'+format+'$', 'i');
+  if(req.url.search(formatRegExp) != -1 && fs.existsSync('.' + req.url)){
     fs.readFile('.' + req.url, function (err, data) {
       if (err) console.log(err);
-      res.writeHead(200, {'Content-Type': 'text/css'});
+      res.writeHead(200, {'Content-Type': contentType});
       res.write(data);
-      process.stdout.write(req_url + " : OK\n");
+      process.stdout.write(req.url + " : OK\n");
       res.end();
     });
   } 
-
-}).listen(8888);
-console.log('Server has started on the port 8888');
+}
