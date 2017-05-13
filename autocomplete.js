@@ -1,6 +1,8 @@
 var inp = document.getElementById("autocomp__textbox");
 var listBox = document.getElementById('autocomp__list');
 var cityCount = 0;
+var status = 'default';
+var list = [];
 
 // костыль для нормальной работы xmlhttp в старых версиях IE
 function getXmlHttp(){
@@ -61,12 +63,23 @@ function generateUL(array, displayLimit) {
     ul.appendChild(li);
   }
   
+  list = array;
+  
   // добавочная информация
   if (array.length != 0) {
+    status = 'found';
+    
     li = document.createElement('li');
     li.innerHTML = "Показано " + max + " из " + cityCount + " найденных городов";
     ul.appendChild(li);
-  } else {
+    // найдено только одно совпадение
+    if (array.length == 1) {
+      if (array[0].toLowerCase() == inp.value.toLowerCase()) {
+        status = 'one found';
+      }
+    }
+  } else { 
+    status = 'not found';
     li = document.createElement('li');
     li.innerHTML = "Ничего не найдено";
     ul.appendChild(li);
@@ -80,16 +93,54 @@ function changeTextHide() {
   onchangetext.newText = inp.value;
 }
 
+function changeText(text) {
+  inp.value = text;
+  onchangetext.oldText = text;
+  onchangetext.newText = text;
+}
+
 function listBoxHide() {
   listBox.style.display = 'none';
-  listBox.innerHTML = "";
+  listBox.innerHTML = '';
+}
+function listBoxReload() {
+  kladrLoad("kladr.json", inp.value, 10);
+}
+function listBoxShow() {
+  listBoxReload();
+  listBox.style.display = '';
 }
 
 function selectCity(city) {
-  inp.value = city;
-  changeTextHide();
+  status = 'selected';
+  
+  changeText(city);
   listBoxHide();
 }
+
+// Потеря фокуса
+inp.onblur = function() {
+  this.classList.remove('autocomp__textbox--error');
+  
+  switch (status) {
+    // ничего не выбрано
+    case 'not found':
+      this.classList.add('autocomp__textbox--error');
+      listBoxHide();
+      break;
+    case 'one found':
+      selectCity(list[0]);
+      listBoxHide();
+      break;
+    case 'found':
+      //listBoxHide();
+      break;
+  }
+};
+
+inp.onfocus = function() {
+  listBoxShow();
+};
 
 function onchangetext(inp, listBox) {
   onchangetext.oldText = onchangetext.newText;
@@ -106,7 +157,6 @@ function onchangetext(inp, listBox) {
     // если изменился текст
     if (onchangetext.newText != onchangetext.oldText) {
       // очищаем список и показываем его
-      list = [];
       listBox.style.display = '';
       
       var displayLimit = 10;    // сколько показывать городов в списке

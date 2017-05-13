@@ -31,6 +31,9 @@ a {
     transition: .25s;
     width: 100%;
   }
+  .autocomp__textbox--error {
+    border: 1px solid red;
+  }
   .autocomp__textbox::-webkit-input-placeholder { 
     color: #bababa;
     transition: .25s; 

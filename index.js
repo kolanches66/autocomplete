@@ -23,20 +23,17 @@ function kladrSelectStrings(array, string, byField) {
   };
 
   return list;
+  // return {list: list.sort(), foundCount: foundCount};
 }
 
 http.createServer(function (req, res) {
   var req_url = req.url;
   
   //  добавляем index.html при '/' на конце
-//  if (req_url.lastIndexOf('/') == req_url.length-1) {
-//    req_url += 'index.html';
-//  }
-
-  //  добавляем index.html при '/' на конце
-  if (req_url.search(/\/$/) != -1) {
+  if (req_url.search(/\/$/) !== -1) {
     req_url += 'index.html';
   }
+//  process.stdout.write(req_url);
 
   // возвращаем not found
   if (!fs.existsSync('.' + req_url)) {
