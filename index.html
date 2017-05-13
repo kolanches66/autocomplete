@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Autocomplete</title>
   <link rel="stylesheet" href="./styles.css">
-  <script src="autocomplete_obj.js"></script>
+  <script src="autocomplete.js"></script>
 </head>
 <body class="layout">
   <div class="autocomp">
@@ -17,9 +17,9 @@
   <!-- <script src="abc.js"></script> -->
   <!--<script src="search.js"></script>-->
   <script>
-    //var my_autoComplete = new AutoComplete('.autocomp__textbox', '.autocomp__list');
+    var autocomplete = new Autocomplete ('.autocomp__textbox', '.autocomp__list', 
+                                         'kladr.json', 'city', 10);
   </script>
-  <script src="autocomplete.js"></script>
 </body>
 
 </html>

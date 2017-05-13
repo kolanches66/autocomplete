@@ -1,170 +1,171 @@
-var inp = document.getElementById("autocomp__textbox");
-var listBox = document.getElementById('autocomp__list');
-var cityCount = 0;
-var status = 'default';
-var list = [];
+ function showProps(obj, objName) {
+   var result = "";
+   for (var i in obj) {
+     if (obj.hasOwnProperty(i)) {
+         result += objName + "." + i + " = " + obj[i]+ "\n";
+     }
+   }
+   return result;
+ }
 
-// костыль для нормальной работы xmlhttp в старых версиях IE
-function getXmlHttp(){
-  var xmlhttp;
-  try {
-    xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-  } catch (e) {
-    try {
-      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    } catch (E) {
-      xmlhttp = false;
-    }
-  }
-  if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
-    xmlhttp = new XMLHttpRequest();
-  }
-  return xmlhttp;
-}
 
-// AJAX
-function kladrLoad(file, string, displayLimit) {  
-  var xmlhttp = getXmlHttp();
-  var params = "city=" + encodeURIComponent(string);
+// Костыль для нормальной работы xmlhttp в старых версиях IE
+function getXmlHttp(){var a;try{a=new ActiveXObject("Msxml2.XMLHTTP")}catch(b){try{a=new ActiveXObject("Microsoft.XMLHTTP")}catch(b){a=!1}}return a||"undefined"==typeof XMLHttpRequest||(a=new XMLHttpRequest),a}
 
-  xmlhttp.open('POST', file, true);
-  xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-  xmlhttp.onreadystatechange = function() {
-    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-      var cities = JSON.parse(xmlhttp.responseText);
-      cityCount = cities.realCount;
-      console.log(cities.array.length);
-      // генерируем UL список подходящих городов
-      listBox.innerHTML = "";
-      listBox.appendChild(generateUL(cities.array, displayLimit, inp.id));
-    }
+var Autocomplete = function(inputSelector, listBoxSelector, jsonFileName, jsonPostParam, listLimit) {
+  
+  // -- Параметры
+
+  // селекторы и DOM элементы, полученные из селекторов
+  this.inputSelector = inputSelector;
+  this.listBoxSelector = listBoxSelector;
+  this.inputs = document.querySelectorAll(inputSelector);
+  this.input = document.querySelector(inputSelector);
+  this.listBox = document.querySelector(listBoxSelector);
+  
+  // название файла JSON и название POST параметра который добавляем при обращении к файлу
+  // (при этом значение параметра — введенная в input строка)
+  this.jsonFileName = jsonFileName;
+  this.jsonPostParam = jsonPostParam;
+
+  // список, который отдает нам сервер
+  this.list = [];
+  // максимальное кол-во элементов в списке
+  this.listLimit = listLimit;
+  // всего найдено совпадений
+  this.foundCount;
+
+  // текущее состояние автокомплита
+  this.status = 'default';
+  
+  // для обнаружения изменений в input
+  this.oldText = '';
+  this.newText = '';
+
+
+  // -- Методы --
+
+  this.init = function() {
+    setInterval(this.onTimer, 1, this);
   };
-  // отправляем введенную юзером строку
-  xmlhttp.send(params);
-}
 
+  // # Получаем список в формате JSON от сервера
+  this.getList = function () {  
+    var that = this;
 
-function generateUL(array, displayLimit) {
-  var ul = document.createElement('ul');
-  var li;
+    var xmlhttp = getXmlHttp();
+    //var params = this.jsonParamName + "=" + encodeURIComponent(this.input.value);
+    var params = this.jsonPostParam + "=" + encodeURIComponent(this.input.value);
 
-  array.length-1 < displayLimit ? max = array.length : max = displayLimit;
+    xmlhttp.open('POST', this.jsonFileName, true);
+    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-  for(var i = 0; i < max; i++) {
-    li = document.createElement('li');
-    var city = array[i];
-    var cityRegExp = new RegExp('('+inp.value+')', 'i');
+    xmlhttp.onreadystatechange = function() {
+      if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        // ответ сервера на наш запрос
+        var result = JSON.parse(xmlhttp.responseText);
+        // получаем список из [displayLimit] элементов и кол-во найденных в файле
+        that.list = result.list;
+        that.foundCount = result.foundCount;
+        // генерируем UL список подходящих городов
+        that.listBox.innerHTML = "";
+        that.listBox.appendChild(that.generateAutocomplete());
+      }
+    };
+    // отправляем введенную в input строку
+    xmlhttp.send(params);
+  };
+
+  this.selectItem = function() {
+  };
+
+  // # Генерация UL-списка из массива
+  this.generateAutocomplete = function() {
+    //var that = this;
+
+    var ul = document.createElement('ul'), 
+        li;
     
-    // выделяем введенную часть города
-    var liString = city.replace(cityRegExp, '<b>$1</b>');
-    liString = '<a onclick="selectCity(\''+city+'\');">' + liString + '</a>';
-    li.innerHTML = liString;
-    ul.appendChild(li);
-  }
-  
-  list = array;
-  
-  // добавочная информация
-  if (array.length != 0) {
-    status = 'found';
+    // ???
+    // зачем нам нужен max ???
+    var max;
+    this.list.length-1 < this.listLimit ? max = this.list.length : max = this.listLimit;
+
+    // регулярка при помощи которой выделяем введенную часть в каждом пункте
+    var re = new RegExp('('+this.input.value+')', 'i');
+
+    // генерация UL-списка из списка, полученного от сервера
+    for(var i = 0; i < max; i++) {
+      var itemName = this.list[i];
+      li = document.createElement('li');
+
+      // выделяем введенную часть
+      var liText = itemName.replace(re, '<b>$1</b>');
+      // при нажатии на пункт — выбранное значение копируется в input и список закрывается
+      liText = '<a onclick="selectItem(\''+itemName+'\');">' + liText + '</a>';
+      li.innerHTML = liText;
+
+      ul.appendChild(li);
+    }
     
-    li = document.createElement('li');
-    li.innerHTML = "Показано " + max + " из " + cityCount + " найденных городов";
-    ul.appendChild(li);
-    // найдено только одно совпадение
-    if (array.length == 1) {
-      if (array[0].toLowerCase() == inp.value.toLowerCase()) {
-        status = 'one found';
+    // добавочная информация под пунктами
+    if (this.list.length != 0) {
+      this.status = 'found';
+      
+      li = document.createElement('li');
+      li.innerHTML = "Показано " + max + " из " + this.foundCount + " найденных городов";
+      ul.appendChild(li);
+
+      // если найдено только одно совпадение
+      if (this.list.length == 1) {
+        if (this.list[0].toLowerCase() == this.input.value.toLowerCase()) {
+          this.status = 'one found';
+        }
+      }
+    } else { 
+      status = 'not found';
+      li = document.createElement('li');
+      li.innerHTML = "Не найдено";
+      ul.appendChild(li);
+    }
+    return ul;
+  };
+
+  // # Фиксирует изменения input
+  this.oldNewText = function(oldText, newText) {
+    this.oldText = oldText;
+    this.newText = newText;
+  };
+
+  // # Событие таймера
+  this.onTimer = function (that) {
+    that.oldNewText(that.newText, that.input.value);
+
+    // очищаем, если ничего не введено
+    if (that.input.value != that.oldText && that.input.value == '') {
+      that.listBox.style.display = 'none';
+      that.listBox.innerHTML = "";
+    } 
+    
+    // если пользователь что-то ввел
+    if (that.input.value.length >= 1) {
+      // если изменился текст
+      if (that.newText != that.oldText) {
+        // очищаем список и показываем его
+        that.listBox.style.display = '';
+        // *** ПОПРОБОВАТЬ getList с return
+        that.getList();
       }
     }
-  } else { 
-    status = 'not found';
-    li = document.createElement('li');
-    li.innerHTML = "Ничего не найдено";
-    ul.appendChild(li);
-  }
-
-  return ul;
-}
-
-function changeTextHide() {
-  onchangetext.oldText = inp.value;
-  onchangetext.newText = inp.value;
-}
-
-function changeText(text) {
-  inp.value = text;
-  onchangetext.oldText = text;
-  onchangetext.newText = text;
-}
-
-function listBoxHide() {
-  listBox.style.display = 'none';
-  listBox.innerHTML = '';
-}
-function listBoxReload() {
-  kladrLoad("kladr.json", inp.value, 10);
-}
-function listBoxShow() {
-  listBoxReload();
-  listBox.style.display = '';
-}
-
-function selectCity(city) {
-  status = 'selected';
+  };
   
-  changeText(city);
-  listBoxHide();
+  // наконец, инициализация 
+  this.init();
+
+  // this.showValues = function() {
+  //   for (var i=0; i<this.inputs.length; i++) {
+  //     alert(this.inputs[i].value);
+  //   }
+  // }
 }
-
-// Потеря фокуса
-inp.onblur = function() {
-  this.classList.remove('autocomp__textbox--error');
-  
-  switch (status) {
-    // ничего не выбрано
-    case 'not found':
-      this.classList.add('autocomp__textbox--error');
-      listBoxHide();
-      break;
-    case 'one found':
-      selectCity(list[0]);
-      listBoxHide();
-      break;
-    case 'found':
-      //listBoxHide();
-      break;
-  }
-};
-
-inp.onfocus = function() {
-  listBoxShow();
-};
-
-function onchangetext(inp, listBox) {
-  onchangetext.oldText = onchangetext.newText;
-  onchangetext.newText = inp.value;
-
-  // очищаем, если ничего не введено
-  if (inp.value != onchangetext.oldText && inp.value == '') {
-    listBox.style.display = 'none';
-    listBox.innerHTML = "";
-  } 
-  
-  // если пользователь что-то ввел
-  if (inp.value.length >= 1) {
-    // если изменился текст
-    if (onchangetext.newText != onchangetext.oldText) {
-      // очищаем список и показываем его
-      listBox.style.display = '';
-      
-      var displayLimit = 10;    // сколько показывать городов в списке
-      // ??? изменить название kladrLoad
-      kladrLoad("kladr.json", inp.value, displayLimit);
-    }
-  }
-}
-
-// отлавливаем изменения
-setInterval(onchangetext, 1, inp, listBox);

@@ -2,28 +2,22 @@ var http = require('http'),
     fs = require('fs');
 var formidable = require('formidable');
 
-function kladrSelectStrings(array, string, byField) {
-  var arrOut = [], limit = 50;
-  var lString = string.toLowerCase();   // меняем регистр искомой строки
+function listFromBigList(bigList, needle, fieldName) {
+  var list = [], limit = 50;
+  needle = needle.toLowerCase();   // меняем регистр искомой строки
 
-  for (var i=0, counter=0; i<array.length; i++) {
-    var arrString = (array[i][byField]).toLowerCase();   // меняем регистр строки из массива
-    if (arrString.indexOf(lString) >= 0) {     // если найдено совпадение
-      if (counter < limit) {
-        arrOut.push(array[i][byField]);
+  for (var i=0, foundCount=0; i<bigList.length; i++) {
+    var haystack = (bigList[i][fieldName]).toLowerCase();   // меняем регистр строки из массива
+    if (haystack.indexOf(needle) >= 0) {     // если найдено совпадение
+      if (foundCount < limit) {
+        list.push(bigList[i][fieldName]);
         //console.log(arrOut[i][byField]);
       }   // добавляем в свежий массив, если не превышает лимит
-      counter++;             // поднимаем счетчик
+      foundCount++;             // поднимаем счетчик
     }
   }
-    
-  var list = {
-    array: arrOut.sort(),
-    realCount: counter
-  };
 
-  return list;
-  // return {list: list.sort(), foundCount: foundCount};
+  return {list: list.sort(), foundCount: foundCount};
 }
 
 http.createServer(function (req, res) {
@@ -57,7 +51,7 @@ http.createServer(function (req, res) {
       fs.readFile('.' + req.url, 'utf8', function (err, data) {
         if (err) throw err;
 
-        var arr = JSON.parse(data);
+        var bigList = JSON.parse(data);
         //console.log(arr.length);
         res.writeHead(200, {'Content-Type': 'application/json'});
         // process.stdout.write(req_url + " : " + "OK");
@@ -79,14 +73,15 @@ http.createServer(function (req, res) {
             }
             var postCity = hCode2String(fields.city);
 
-            var list = kladrSelectStrings(arr, postCity, 'City');
+            var list = listFromBigList(bigList, postCity, 'City');
+            //console.log(list);
             res.write(JSON.stringify(list));
             res.end();
           });
         }
         // если метод не POST, то просто возвращаем весь файл
         else {
-          res.write(JSON.stringify(arr));
+          res.write(JSON.stringify(bigList));
           res.end();
         }
       });
