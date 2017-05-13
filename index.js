@@ -11,7 +11,7 @@ function kladrSelectStrings(array, string, byField) {
     if (arrString.indexOf(lString) >= 0) {     // если найдено совпадение
       if (counter < limit) {
         arrOut.push(array[i][byField]);
-        //console.log(arrOut[i]);
+        //console.log(arrOut[i][byField]);
       }   // добавляем в свежий массив, если не превышает лимит
       counter++;             // поднимаем счетчик
     }
@@ -27,9 +27,14 @@ function kladrSelectStrings(array, string, byField) {
 
 http.createServer(function (req, res) {
   var req_url = req.url;
+  
+  //  добавляем index.html при '/' на конце
+//  if (req_url.lastIndexOf('/') == req_url.length-1) {
+//    req_url += 'index.html';
+//  }
 
   //  добавляем index.html при '/' на конце
-  if (req_url.lastIndexOf('/') == req_url.length-1) {
+  if (req_url.search(/\/$/) != -1) {
     req_url += 'index.html';
   }
 
@@ -56,7 +61,7 @@ http.createServer(function (req, res) {
         if (err) throw err;
 
         var arr = JSON.parse(data);
-        console.log(arr.length);
+        //console.log(arr.length);
         res.writeHead(200, {'Content-Type': 'application/json'});
         // process.stdout.write(req_url + " : " + "OK");
         // process.stdout.write(" : " + req.method + '\n');

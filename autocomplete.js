@@ -32,11 +32,10 @@ function kladrLoad(file, string, displayLimit) {
     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
       var cities = JSON.parse(xmlhttp.responseText);
       cityCount = cities.realCount;
-      // ищем в списке соответсвие
-      findString(cities.array, list, string, 'City');
+      console.log(cities.array.length);
       // генерируем UL список подходящих городов
       listBox.innerHTML = "";
-      listBox.appendChild(generateUL(list, displayLimit, inp.id));
+      listBox.appendChild(generateUL(cities.array, displayLimit, inp.id));
     }
   };
   // отправляем введенную юзером строку
@@ -46,12 +45,13 @@ function kladrLoad(file, string, displayLimit) {
 
 function generateUL(array, displayLimit) {
   var ul = document.createElement('ul');
+  var li;
 
-  array.length-1 < displayLimit ? max = array.length-1 : max = displayLimit;
+  array.length-1 < displayLimit ? max = array.length : max = displayLimit;
 
-  for(var i = 0; i < max+1; i++) {
-    var li = document.createElement('li');
-    var city = array[i]['string'];
+  for(var i = 0; i < max; i++) {
+    li = document.createElement('li');
+    var city = array[i];
     var cityRegExp = new RegExp('('+inp.value+')', 'i');
     
     // выделяем введенную часть города
@@ -62,23 +62,15 @@ function generateUL(array, displayLimit) {
   }
   
   // добавочная информация
-  if (array.length > displayLimit) {
-    var li = document.createElement('li');
-    li.innerHTML = 
-      "Показано " + max.toString() + " из " + array.length + " найденных городов";
+  if (array.length != 0) {
+    li = document.createElement('li');
+    li.innerHTML = "Показано " + max + " из " + cityCount + " найденных городов";
     ul.appendChild(li);
-    //console.log(array[array.length]);
-  } else if (array.length == 0) {
-    var li = document.createElement('li');
-    li.innerHTML = 
-      "Ничего не найдено";
-      //+ "Такого города нет в списке или вы опечатались";
+  } else {
+    li = document.createElement('li');
+    li.innerHTML = "Ничего не найдено";
     ul.appendChild(li);
   }
-  
-  var li = document.createElement('li');
-  li.innerHTML = "Всего загружено городов: " + cityCount;
-  ul.appendChild(li);
 
   return ul;
 }
@@ -118,9 +110,11 @@ function onchangetext(inp, listBox) {
       listBox.style.display = '';
       
       var displayLimit = 10;    // сколько показывать городов в списке
+      // ??? изменить название kladrLoad
       kladrLoad("kladr.json", inp.value, displayLimit);
     }
   }
 }
 
-setInterval(onchangetext, 100, inp, listBox);
+// отлавливаем изменения
+setInterval(onchangetext, 1, inp, listBox);

@@ -12,6 +12,8 @@
 a {
   color: #0077cc;
   cursor: pointer;
+  display: block;
+  height: inherit;
 }
 
 .autocomp {
@@ -56,4 +58,7 @@ a {
     }
       .autocomp__list > ul > li {
         padding: 3px 10px;
+      }
+      .autocomp__list > ul > li:hover {
+        background: #ddeedd; 
       }
