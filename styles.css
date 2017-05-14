@@ -21,18 +21,30 @@ a {
   width: 350px;
 }
 
+  .autocomp__label {
+    color: #404040; 
+    display: inline;
+    font: 14px "Segoe UI"; 
+    letter-spacing: -0.025em;
+    line-height: 20px;
+    padding-right: 30px;
+  }
+
   .autocomp__textbox {
     border: 1px solid #ddd;
     color: #404040; 
+    display: inline;
     font: 14px "Segoe UI"; 
     line-height: 20px;
     outline: 0;
     padding: 5px 10px;
     transition: .25s;
-    width: 100%;
   }
   .autocomp__textbox--error {
     border: 1px solid red;
+  }
+  .autocomp__textbox--warning {
+    border: 1px solid #ffa621 !important;
   }
   .autocomp__textbox::-webkit-input-placeholder { 
     color: #bababa;
@@ -52,6 +64,7 @@ a {
   .autocomp__list {
     border: 1px solid #ddd;
     border-top: 0;
+    position: absolute;
     width: 100%;
   }
     .autocomp__list > ul {
@@ -64,4 +77,7 @@ a {
       }
       .autocomp__list > ul > li:hover {
         background: #ddeedd; 
+      }
+      .autocomp__list__li--selected {
+        background: #ddd; 
       }

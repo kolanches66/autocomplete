@@ -2,18 +2,20 @@ var http = require('http'),
     fs = require('fs');
 var formidable = require('formidable');
 
+// *** добавить limit через POST
 function listFromBigList(bigList, needle, fieldName) {
   var list = [], limit = 50;
   needle = needle.toLowerCase();   // меняем регистр искомой строки
+  var re = new RegExp('^' + needle, 'i');
 
   for (var i=0, foundCount=0; i<bigList.length; i++) {
     var haystack = (bigList[i][fieldName]).toLowerCase();   // меняем регистр строки из массива
-    if (haystack.indexOf(needle) >= 0) {     // если найдено совпадение
+    //if (haystack.indexOf(needle) >= 0) {     // если найдено совпадение
+    if (haystack.search(re) !== -1) {
       if (foundCount < limit) {
         list.push(bigList[i][fieldName]);
-        //console.log(arrOut[i][byField]);
-      }   // добавляем в свежий массив, если не превышает лимит
-      foundCount++;             // поднимаем счетчик
+      }   // добавляем в массив, если не превышает лимит
+      foundCount++;   
     }
   }
 
@@ -21,19 +23,14 @@ function listFromBigList(bigList, needle, fieldName) {
 }
 
 http.createServer(function (req, res) {
-  var req_url = req.url;
-  
-  //  добавляем index.html при '/' на конце
-  if (req_url.search(/\/$/) !== -1) {
-    req_url += 'index.html';
+  if (req.url.search(/\/$/) !== -1) {
+    req.url += 'index.html';
   }
-//  process.stdout.write(req_url);
 
-  // возвращаем not found
-  if (!fs.existsSync('.' + req_url)) {
+  if (!fs.existsSync('.' + req.url)) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.write("404 Not Found");
-    process.stdout.write(req_url + " : " + "404 Not Found")
+    process.stdout.write(req.url + " : " + "404 Not Found")
     process.stdout.write(" : " + req.method + '\n');
     res.end();
   }
@@ -53,8 +50,8 @@ http.createServer(function (req, res) {
 
         var bigList = JSON.parse(data);
         //console.log(arr.length);
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        // process.stdout.write(req_url + " : " + "OK");
+        res.writeHead(200, {'Content-Type': 'application/json; charset=utf8',  'Access-Control-Allow-Origin': '*'});
+        // process.stdout.write(req.url + " : " + "OK");
         // process.stdout.write(" : " + req.method + '\n');
 
         if (req.method == 'POST') {
@@ -93,7 +90,7 @@ http.createServer(function (req, res) {
         if (err) throw err;
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.write(data);
-        process.stdout.write(req_url + " : OK\n");
+        process.stdout.write(req.url + " : OK\n");
         res.end();
       });
     }
@@ -101,8 +98,6 @@ http.createServer(function (req, res) {
 
 }).listen(8888);
 console.log('Server has started on the port 8888');
-
-
 
 function getFile(format, contentType, req, res) {
   var formatRegExp = new RegExp('\.'+format+'$', 'i');
