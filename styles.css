@@ -21,6 +21,11 @@ a {
   width: 350px;
 }
 
+  .field-header {
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
   .autocomp__label {
     color: #404040; 
     display: inline;
@@ -39,6 +44,7 @@ a {
     outline: 0;
     padding: 5px 10px;
     transition: .25s;
+    width: 350px;
   }
   .autocomp__textbox--error {
     border: 1px solid red;
@@ -63,9 +69,7 @@ a {
 
   .autocomp__list {
     border: 1px solid #ddd;
-    border-top: 0;
     position: absolute;
-    width: 100%;
   }
     .autocomp__list > ul {
       font: 14px "Segoe UI"; 

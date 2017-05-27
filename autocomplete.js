@@ -55,6 +55,7 @@ var Autocomplete = function(inputSelector, listBoxSelector, jsonFileName, jsonPo
       that.inputFocus = true;
       
       // уничтожаем все лишние стили
+      that.input.classList.remove('autocomp__textbox--warning');
       that.input.classList.remove('autocomp__textbox--error');
       switch(that.status) {
         case 'not found':
@@ -90,12 +91,14 @@ var Autocomplete = function(inputSelector, listBoxSelector, jsonFileName, jsonPo
   // # Получаем список в формате JSON от сервера
   this.getList = function () {     // *** ПОПРОБОВАТЬ getList с return
     var that = this;
+    
+    var start = new Date();
 
     var xmlhttp = getXmlHttp();
     //var params = this.jsonParamName + "=" + encodeURIComponent(this.input.value);
     var params = this.jsonPostParam + "=" + encodeURIComponent(this.input.value);
 
-    xmlhttp.open('POST', 'http://localhost:8888/' + this.jsonFileName, true);
+    xmlhttp.open('POST', this.jsonFileName, true);
     xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
     xmlhttp.onreadystatechange = function() {
@@ -108,6 +111,8 @@ var Autocomplete = function(inputSelector, listBoxSelector, jsonFileName, jsonPo
         // генерируем UL список подходящих городов
         that.listBox.innerHTML = "";
         that.listBox.appendChild(that.generateAutocomplete());
+        
+        console.log("Delta: " + (new Date() - start) + " ms");
       }
     };
     // отправляем введенную в input строку
@@ -205,13 +210,23 @@ var Autocomplete = function(inputSelector, listBoxSelector, jsonFileName, jsonPo
   this.onTimer = function (that) {
     that.oldNewText(that.newText, that.input.value);
     
-    if (that.status === 'not found') {
+    that.listBox.style.width = 'auto';
+    // подтягиваем ширину, если надо
+    if (that.listBox.offsetWidth < that.input.offsetWidth) {
+      that.listBox.style.width = that.input.offsetWidth + 'px';
+    } else {
+      that.listBox.style.width = 'auto';
+    }
+    
+    if (that.status === 'not found' && that.inputFocus) {
       that.input.classList.add('autocomp__textbox--warning');
     } else {
       that.input.classList.remove('autocomp__textbox--warning');
     }
 
     if (that.input.value.length < that.minChars) {
+      that.input.classList.remove('autocomp__textbox--warning');
+      that.input.classList.remove('autocomp__textbox--error');
       that.listBoxHide();
     } else {         // если больше 2-ух символов (по-умолчанию)
       if (that.newText !== that.oldText) {  // если изменился текст
